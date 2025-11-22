@@ -2,790 +2,743 @@
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL Study Notes (Interactive B&W Edition)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SQL Study App</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Noto+Sans+Sinhala:wght@400;500;600;800&family=JetBrains+Mono:wght@500;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+Sinhala:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     
     <!-- AlaSQL for in-browser SQL engine -->
     <script src="https://cdn.jsdelivr.net/npm/alasql@4.0.0/dist/alasql.min.js"></script>
 
     <style>
         :root {
-            /* Grayscale Palette */
-            --bg-color: #ffffff;
-            --card-border: #000000;
-            --text-primary: #000000;
-            --text-secondary: #444444;
-            --code-bg: #f4f4f4;
-            --page-width: 210mm;
-            --page-height: 296mm;
+            --app-bg: #f0f0f0;
+            --surface: #ffffff;
+            --ink: #000000;
+            --ink-secondary: #555555;
+            --border-width: 2px;
+            --radius: 12px;
+            --shadow: 4px 4px 0px var(--ink);
+            --shadow-hover: 2px 2px 0px var(--ink);
+            --nav-height: 65px;
+            --header-height: 60px;
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: #e0e0e0; /* Contrast for screen viewing */
-            font-family: 'Inter', 'Noto Sans Sinhala', sans-serif;
-            font-size: 10.5px;
-            line-height: 1.4;
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px;
-            padding: 30px;
-        }
-
-        @page {
-            size: A4;
             margin: 0;
+            padding: 0;
+            background-color: var(--app-bg);
+            font-family: 'Inter', 'Noto Sans Sinhala', sans-serif;
+            color: var(--ink);
+            height: 100vh;
+            height: 100dvh; /* Dynamic viewport height for mobile */
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .page {
-            background-color: var(--bg-color);
-            width: var(--page-width);
-            min-height: var(--page-height); 
-            padding: 15mm;
-            position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        /* App Container - Centers on desktop, full width on mobile */
+        #app-root {
+            width: 100%;
+            max-width: 500px; /* Mobile app constraints on desktop */
+            background: var(--surface);
+            height: 100%;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            border-bottom: 1px solid #999;
-        }
-
-        header {
-            margin-bottom: 15px;
-            border-bottom: 3px solid #000; /* Thick black line */
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #000; text-transform: uppercase; }
-        .subtitle { color: var(--text-secondary); font-size: 12px; font-weight: 600; }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            align-content: start;
-            flex-grow: 1;
-        }
-
-        /* B&W Card Style: Borders instead of Backgrounds */
-        .section-card {
-            background: #fff;
-            border: 1.5px solid #000;
-            border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 14px;
-            break-inside: avoid;
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            text-transform: uppercase;
-            border-bottom: 1px dotted #999;
-            padding-bottom: 4px;
-        }
-
-        /* High Contrast Badges */
-        .badge {
-            font-size: 9px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            text-transform: uppercase;
-            border: 1px solid #000;
-        }
-        .badge.ddl, .badge.dml, .badge.adv { background: #fff; color: #000; }
-        .badge.sql { background: #000; color: #fff; } 
-
-        h3 { font-size: 11px; font-weight: 700; margin-top: 10px; margin-bottom: 4px; color: #000; }
-        p { margin-bottom: 6px; color: #222; font-size: 10.5px; }
-
-        /* Study Tip: Double Border style */
-        .study-tip {
-            background-color: #fff;
-            border-left: 4px double #000;
-            padding: 6px 10px;
-            margin-top: 8px;
-            font-size: 9.5px;
-            color: #333;
-            font-style: italic;
-        }
-        .study-tip strong { color: #000; font-style: normal; font-weight: 700; display: block; font-size: 9px; text-transform: uppercase; }
-
-        /* --- INTERACTIVE ELEMENTS STYLING FOR B&W --- */
-        
-        .code-wrapper {
             position: relative;
-            margin-top: 4px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
 
-        .code-block {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--code-bg);
-            border: 1px solid #999;
-            border-radius: 4px;
-            padding: 8px 10px;
-            padding-right: 25px;
+        /* --- HEADER --- */
+        header {
+            height: var(--header-height);
+            border-bottom: var(--border-width) solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: var(--surface);
+            z-index: 20;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+        h1 span {
             font-size: 10px;
-            color: #000;
-            overflow-x: hidden;
-            white-space: pre-wrap; 
-            word-break: break-word;
-            outline: none;
-            transition: all 0.2s;
+            font-weight: 600;
+            color: var(--ink-secondary);
+            margin-top: 2px;
         }
 
-        .code-block:focus {
-            background: #fff;
-            border-color: #000;
-            box-shadow: 3px 3px 0px rgba(0,0,0,1); /* Brutalist shadow focus */
-        }
-
-        /* B&W Run Button */
-        .run-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 20px;
-            height: 20px;
-            background: #fff;
-            border: 1px solid #000;
-            border-radius: 3px;
+        .header-actions button {
+            background: none;
+            border: var(--border-width) solid var(--ink);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.1s;
-            z-index: 10;
+            transition: transform 0.1s;
         }
-        .run-btn:hover {
-            background: #000;
-            color: #fff;
-        }
-        .run-btn svg {
-            width: 10px;
-            height: 10px;
-            fill: currentColor;
+        .header-actions button:active {
+            background: var(--ink);
+            color: var(--surface);
+            transform: scale(0.9);
         }
 
-        /* --- LIGHT THEME CONSOLE OUTPUT --- */
-        .console-output {
-            display: none; 
-            margin-top: 5px;
-            background: #ffffff; 
-            color: #000000;      
-            border: 1px solid #000; 
-            border-radius: 4px;
-            padding: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
-            overflow-x: auto;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.1); 
-        }
-        
-        .console-output table {
-            border-collapse: collapse;
-            width: 100%;
-            color: #000;
-        }
-        .console-output th, .console-output td {
-            border: 1px solid #000;
-            padding: 4px;
-            text-align: left;
-        }
-        .console-output th { 
-            text-transform: uppercase; 
-            border-bottom: 2px solid #000; 
-            background: #f4f4f4; 
-            font-weight: 800;
-        }
-        .success-msg { color: #000; font-weight: bold; } 
-        .error-msg { color: #d32f2f; background: #fff0f0; padding: 4px; border: 1px solid #d32f2f; display: block; }
-
-        .kw { color: #000; font-weight: 800; } 
-        .fn { color: #333; font-weight: 600; } 
-        .str { color: #444; font-style: italic; } 
-        .cm { color: #666; font-style: italic; text-decoration: underline dotted; } 
-
-        /* Footer Elements */
-        .page-number { position: absolute; bottom: 10mm; right: 15mm; font-size: 10px; color: #000; font-weight: 700; }
-        .footer-line { position: absolute; bottom: 10mm; left: 15mm; width: 100%; height: 2px; background: #000; opacity: 0.1; }
-        
-        .designer-credit {
-            position: absolute;
-            bottom: 7mm;
-            left: 15mm;
-            font-family: 'Dancing Script', cursive;
-            font-size: 14px;
-            color: #000;
+        /* --- MAIN CONTENT AREA --- */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding: 16px;
+            padding-bottom: calc(var(--nav-height) + 20px); /* Space for nav */
         }
 
-        /* Reset DB Button (B&W Style) */
-        .reset-db {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #fff;
-            color: #000;
-            border: 2px solid #000;
-            padding: 10px 15px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 4px 4px 0px rgba(0,0,0,1);
-            z-index: 1000;
+        /* Tab Views */
+        .tab-view {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .tab-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- CARDS --- */
+        .card {
+            background: var(--surface);
+            border: var(--border-width) solid var(--ink);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
             display: flex;
-            gap: 8px;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .card-title {
+            font-weight: 800;
+            font-size: 14px;
             text-transform: uppercase;
         }
-        .reset-db:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px rgba(0,0,0,1); }
-        .reset-db:hover { background: #000; color: #fff; }
 
-        @media print {
-            body { background: none; padding: 0; gap: 0; width: 210mm; }
-            .page { 
-                width: 210mm; height: 296mm; margin: 0; padding: 15mm; 
-                box-shadow: none; border: none; page-break-after: always; 
-            }
-            .grid-container { height: auto; }
-            .run-btn, .reset-db, .console-output { display: none !important; }
-            .code-block { border: 1px solid #999 !important; background: #f4f4f4 !important; }
-            @page { margin: 0; }
+        .card-subtitle {
+            font-size: 11px;
+            color: var(--ink-secondary);
+            font-weight: 600;
         }
+
+        p { margin: 0 0 8px 0; font-size: 13px; line-height: 1.5; }
+
+        /* --- BADGES & CHIPS --- */
+        .badge-container { display: flex; gap: 8px; margin-bottom: 8px; }
+        .badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border: 1.5px solid var(--ink);
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .badge.fill { background: var(--ink); color: var(--surface); }
+
+        /* --- CODE BLOCKS --- */
+        .code-wrapper {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .code-editor {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f8f8f8;
+            border: 1.5px solid var(--ink-secondary);
+            border-radius: 6px;
+            padding: 12px;
+            padding-right: 40px; /* Space for run btn */
+            font-size: 12px;
+            color: var(--ink);
+            white-space: pre-wrap;
+            outline: none;
+            line-height: 1.5;
+            /* Prevent iOS zoom */
+            min-height: 45px;
+        }
+        
+        .code-editor:focus {
+            border-color: var(--ink);
+            background: #fff;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+
+        .run-fab {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+        .run-fab:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        /* --- CONSOLE OUTPUT --- */
+        .console-drawer {
+            margin-top: 8px;
+            border: 1px solid var(--ink);
+            border-radius: 6px;
+            overflow: hidden;
+            display: none;
+            font-size: 11px;
+            background: #fff;
+        }
+        .console-drawer.open { display: block; }
+        
+        .console-header {
+            background: #eee;
+            padding: 4px 8px;
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .console-body {
+            padding: 8px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+        th { background: #f9f9f9; font-weight: 700; }
+        .success { color: #006400; font-weight: 600; }
+        .error { color: #d32f2f; background: #ffebeb; padding: 4px; display: block; }
+
+        /* --- STUDY TIPS --- */
+        .tip-box {
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #fff;
+            border-left: 4px double var(--ink);
+            font-size: 12px;
+            color: #333;
+        }
+        .tip-box strong { display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }
+
+        /* --- BOTTOM NAVIGATION --- */
+        .nav-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: var(--surface);
+            border-top: var(--border-width) solid var(--ink);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); /* iPhone X+ fix */
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            height: 100%;
+            border: none;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: var(--ink-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .nav-item span {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .nav-item.active {
+            color: var(--ink);
+            background: #f4f4f4;
+        }
+        .nav-item.active span { font-weight: 800; }
+        .nav-item.active svg { stroke-width: 2.5; fill: rgba(0,0,0,0.05); }
+
+        /* Toast Notification */
+        .toast {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: max-content;
+        }
+        .toast.show { opacity: 1; }
+
+        /* Utilities */
+        .mt-2 { margin-top: 8px; }
+        .mb-0 { margin-bottom: 0; }
+        .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #eee; padding: 2px 4px; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <!-- Reset Button -->
-    <button class="reset-db" onclick="initDB()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/></svg>
-        Reset
-    </button>
-
-    <!-- PAGE 1 -->
-    <div class="page">
-        <header>
-            <div>
-                <h1>SQL <span style="font-weight: 400;">Study Note</span></h1>
-                <div class="subtitle">Structured Query Language | ව්‍යුහගත විමසුම් බස</div>
-            </div>
-            <div class="badge sql">PART 01</div>
-        </header>
-
-        <div class="grid-container">
-            <div class="col">
-                <div class="section-card">
-                    <div class="card-title">
-                        SQL වර්ගීකරණය <span style="font-weight:400; font-size:11px; margin-left:auto;">(Types)</span>
-                    </div>
-                    <p>SQL මූලික කොටස් දෙකකි:</p>
-                    <div style="margin-top:6px;">
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                            <span class="badge ddl">DDL</span> 
-                            <span style="font-size:10px;"><b>Structure</b> (ව්‍යුහය සෑදීමට)</span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span class="badge dml">DML</span> 
-                            <span style="font-size:10px;"><b>Data</b> (දත්ත හැසිරවීමට)</span>
-                        </div>
-                    </div>
-                    
-                    <div class="study-tip">
-                        <strong>උදාහරණයක් ලෙස (Analogy):</strong>
-                        DDL = <b>නිවසක් සෑදීම</b> (බිත්ති/කාමර වෙන් කිරීම).<br>
-                        DML = <b>නිවස භාවිතා කිරීම</b> (ගෘහ භාණ්ඩ දැමීම).
-                    </div>
-                </div>
-
-                <div class="section-card" style="border-left-width: 5px;">
-                    <div class="card-title">
-                        DDL භාවිතය <span style="font-weight:400; font-size:11px; margin-left:auto;">(Usage)</span>
-                    </div>
-                    <p>දත්ත ගබඩා කරන ආකාරය තීරණය කරයි.</p>
-                </div>
-
-                <div class="section-card">
-                    <div class="card-title">1. නිර්මාණය කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Create)</span></div>
-                    
-                    <h3>දත්ත සමුදාය (Database)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">CREATE DATABASE</span> school_db;</div>
-                    </div>
-
-                    <h3>වගුව (Table)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">CREATE TABLE</span> student (<br>&nbsp;&nbsp;id <span class="fn">INT</span>,<br>&nbsp;&nbsp;name <span class="fn">VARCHAR</span>(50)<br>);</div>
-                    </div>
-                    <div class="study-tip">
-                        <span class="fn">INT</span> = ඉලක්කම් (Numbers)<br>
-                        <span class="fn">VARCHAR</span> = අකුරු (Text)
-                    </div>
-                </div>
-                
-                <div class="section-card">
-                    <div class="card-title">2. ඉවත් කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Drop)</span></div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div>
-                            <h3 style="margin-top:0; font-size:10px;">වගු (Table)</h3>
-                            <div class="code-wrapper">
-                                <div class="code-block" contenteditable="true" spellcheck="false" style="margin-top:2px; padding:6px;"><span class="kw">DROP TABLE</span> student;</div>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 style="margin-top:0; font-size:10px;">සමුදාය (DB)</h3>
-                            <div class="code-wrapper">
-                                <div class="code-block" contenteditable="true" spellcheck="false" style="margin-top:2px; padding:6px;"><span class="kw">DROP DATABASE</span> school_db;</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="study-tip" style="border-left: 4px solid #000; margin-top:8px;">
-                        <strong>අවවාදයයි (Warning):</strong>
-                        සියල්ල මැකී යයි, නැවත ලබාගත නොහැක!<br>
-                        (Deletes everything forever).
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="section-card">
-                    <div class="card-title">3. වගු වෙනස් කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Alter)</span></div>
-                    <p>සෑදූ වගුවක කොටස් වෙනස් කිරීම.</p>
-                    
-                    <h3>ඇතුලත් කිරීම (Add)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false" data-context="alter_add_email"><span class="kw">ALTER TABLE</span> student<br><span class="kw">ADD COLUMN</span> email <span class="fn">VARCHAR</span>(100);</div>
-                    </div>
-
-                    <h3>මකා දැමීම (Drop Col)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false" data-context="alter_drop_age"><span class="kw">ALTER TABLE</span> student<br><span class="kw">DROP COLUMN</span> age;</div>
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <div class="card-title">4. යතුරු <span style="font-weight:400; font-size:11px; margin-left:auto;">(Keys)</span></div>
-                    
-                    <h3>ප්‍රාථමික යතුර (Primary Key)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">CREATE TABLE</span> staff (<br>&nbsp;&nbsp;id <span class="fn">INT</span> <span class="kw">PRIMARY KEY</span>,<br>&nbsp;&nbsp;name <span class="fn">STRING</span><br>);</div>
-                    </div>
-                    <div class="study-tip">
-                        <strong>සංකල්පය:</strong> අනන්‍ය අංකයකි. එකම අංකය දෙදෙනෙකුට තිබිය නොහැක. (Unique ID like NIC)
-                    </div>
-
-                    <h3 style="margin-top:10px;">ආගන්තුක යතුර (Foreign Key)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">CREATE TABLE</span> order_log (<br>&nbsp;&nbsp;oid <span class="fn">INT</span>,<br>&nbsp;&nbsp;uid <span class="fn">INT</span>,<br>&nbsp;&nbsp;<span class="kw">FOREIGN KEY</span>(uid) <span class="kw">REFERENCES</span> users(id)<br>);</div>
-                    </div>
-                    <div class="study-tip">
-                        <strong>සංකල්පය:</strong> වගු දෙකක් එකිනෙක සම්බන්ධ කරයි (Links tables).
-                    </div>
-                </div>
-            </div>
+<div id="app-root">
+    <header>
+        <h1>
+            SQL STUDY
+            <span>Interactive Notes</span>
+        </h1>
+        <div class="header-actions">
+            <button onclick="resetDB()" title="Reset Database">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"></path><path d="M3 3v9h9"></path></svg>
+            </button>
         </div>
+    </header>
+
+    <div class="toast" id="toast">Database Reset Successfully</div>
+
+    <main id="main-content">
         
-        <div class="designer-credit">Designed by ChX</div>
-        <div class="footer-line"></div>
-        <div class="page-number">Page 01</div>
-    </div>
-
-    <!-- PAGE 2 -->
-    <div class="page">
-        <header>
-            <div>
-                <h1>SQL <span style="font-weight: 400;">Study Note</span></h1>
-                <div class="subtitle">Data Manipulation | දත්ත මෙහෙයවීම</div>
-            </div>
-            <div class="badge sql">PART 02</div>
-        </header>
-
-        <div class="grid-container">
-            <div class="col">
-                 <div class="section-card" style="border-left-width: 5px;">
-                    <div class="card-title">
-                        DML භාවිතය <span style="font-weight:400; font-size:11px; margin-left:auto;">(Usage)</span>
-                    </div>
-                    <p>වගුවල ඇති දත්ත (Rows) කළමනාකරණය.</p>
-                </div>
-
-                <div class="section-card">
-                    <div class="card-title">1. දත්ත ඇතුළත් කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Insert)</span></div>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">INSERT INTO</span> student (id, name)<br><span class="kw">VALUES</span> (10, <span class="str">'Kamal'</span>);</div>
-                    </div>
-                    <div class="study-tip">
-                        <strong>සටහන:</strong> අනුපිළිවෙල වැදගත්ය! පළමු අගය පළමු තීරුවට. (Order matters).
+        <!-- TAB 1: STRUCTURE (DDL) -->
+        <div class="tab-view active" id="view-ddl">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Types of SQL</div>
+                        <div class="card-subtitle">වර්ගීකරණය</div>
                     </div>
                 </div>
-
-                <div class="section-card">
-                    <div class="card-title">2. දත්ත වෙනස් කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Update)</span></div>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">UPDATE</span> student<br><span class="kw">SET</span> name = <span class="str">'Sunil'</span><br><span class="kw">WHERE</span> id = 1;</div>
-                    </div>
-                    <div class="study-tip" style="border-left-width: 4px; border-left-style: solid;">
-                        <strong>වැදගත්:</strong> <b>WHERE</b> නැතිනම් <b>සියලුම</b> දෙනා වෙනස් වේ! (Use WHERE or update ALL).
-                    </div>
+                <div class="badge-container">
+                    <span class="badge fill">DDL</span>
+                    <span class="badge">Structure</span>
                 </div>
-
-                 <div class="section-card">
-                    <div class="card-title">3. දත්ත මැකීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Delete)</span></div>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">DELETE FROM</span> student<br><span class="kw">WHERE</span> id = 1;</div>
-                    </div>
-                    <p style="font-size:9px; color:#555; margin-top:3px;">(පේළිය ඉවත් වේ, වගුව ඉතිරි වේ).</p>
+                <p>Defines the <b>structure</b> (tables, databases).</p>
+                <div class="badge-container">
+                    <span class="badge fill" style="background:#fff; color:#000;">DML</span>
+                    <span class="badge" style="border:none; padding-left:0;">Data</span>
+                </div>
+                <p>Manipulates the <b>data</b> inside tables.</p>
+                <div class="tip-box">
+                    <strong>Analogy</strong>
+                    DDL = Building the house.<br>
+                    DML = Moving furniture inside.
                 </div>
             </div>
 
-            <div class="col">
-                <div class="section-card">
-                    <div class="card-title">4. දත්ත බැලීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Select)</span></div>
-                    
-                    <h3>සියල්ල (All)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> * <span class="kw">FROM</span> student;</div>
-                    </div>
-
-                    <h3>තීරු තෝරා ගැනීම (Specific)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> name, age <span class="kw">FROM</span> student;</div>
-                    </div>
-
-                    <h3>කොන්දේසි (Filter)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> * <span class="kw">FROM</span> student<br><span class="kw">WHERE</span> age > 20;</div>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">1. Create Database</div>
                 </div>
+                <p>Create a container for your data.</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">CREATE DATABASE school_db;</div>
+                </div>
+            </div>
 
-                <div class="section-card">
-                    <div class="card-title">5. වගු සම්බන්ධ කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Join)</span></div>
-                    
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                        <!-- High contrast Venn Diagram -->
-                        <svg width="40" height="25" viewBox="0 0 100 60">
-                            <circle cx="35" cy="30" r="25" fill="none" stroke="#000" stroke-width="2"/>
-                            <circle cx="65" cy="30" r="25" fill="none" stroke="#000" stroke-width="2"/>
-                            <path d="M 47,12 A 25,25 0 0,1 47,48 A 25,25 0 0,1 47,12" fill="#000"/>
-                        </svg>
-                        <p style="font-size:9px; line-height:1.2; flex:1;">
-                            වගු <b>දෙකේම</b> ඇති පොදු දත්ත (Common records).
-                        </p>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">2. Create Table</div>
+                </div>
+                <p>Define columns and data types.</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">CREATE TABLE student (
+  id INT,
+  name VARCHAR(50)
+);</div>
+                </div>
+                <div class="tip-box">
+                    <strong>Types</strong>
+                    <span class="mono">INT</span> = Numbers<br>
+                    <span class="mono">VARCHAR</span> = Text
+                </div>
+            </div>
 
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> s.name, c.course<br><span class="kw">FROM</span> student <span class="kw">AS</span> s<br><span class="kw">JOIN</span> courses <span class="kw">AS</span> c<br><span class="kw">ON</span> s.cid = c.id;</div>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">3. Alter Table</div>
+                </div>
+                <p>Modify existing structure.</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">ALTER TABLE student
+ADD COLUMN email VARCHAR(100);</div>
+                </div>
+                <div class="mt-2 code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">ALTER TABLE student
+DROP COLUMN age;</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">4. Keys</div>
+                </div>
+                <p><b>Primary Key:</b> Unique ID (like NIC).</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">CREATE TABLE staff (
+  id INT PRIMARY KEY,
+  name STRING
+);</div>
                 </div>
             </div>
         </div>
 
-        <div class="designer-credit">Designed by ChX</div>
-        <div class="footer-line"></div>
-        <div class="page-number">Page 02</div>
-    </div>
-
-    <!-- PAGE 3 -->
-    <div class="page">
-        <header>
-            <div>
-                <h1>SQL <span style="font-weight: 400;">Study Note</span></h1>
-                <div class="subtitle">Analysis & Subqueries | ගණනය කිරීම් සහ උප විමසුම්</div>
-            </div>
-            <div class="badge sql">PART 03</div>
-        </header>
-
-        <div class="grid-container">
-            <div class="col">
-                <div class="section-card" style="border-left-width: 5px;">
-                    <div class="card-title">
-                        පරිගණක විමසුම් <span style="font-weight:400; font-size:11px; margin-left:auto;">(Analysis)</span>
-                    </div>
-                    <p>දත්ත ගණනය කිරීමට සහ විශ්ලේෂණය කිරීමට.</p>
+        <!-- TAB 2: DATA (DML) -->
+        <div class="tab-view" id="view-dml">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">1. Insert Data</div>
+                    <div class="card-subtitle">ඇතුළත් කිරීම</div>
                 </div>
-
-                <div class="section-card">
-                    <div class="card-title">1. ගණනය කිරීම් <span style="font-weight:400; font-size:11px; margin-left:auto;">(Aggregates)</span></div>
-                    
-                    <h3>ගණන (Count)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> student;</div>
-                    </div>
-
-                    <h3>සාමාන්‍ය අගය (Average)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT AVG</span>(marks) <span class="kw">FROM</span> student;</div>
-                    </div>
-
-                    <h3>එකතුව (Sum)</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT SUM</span>(amount) <span class="kw">FROM</span> sales;</div>
-                    </div>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">INSERT INTO student (id, name)
+VALUES (10, 'Kamal');</div>
                 </div>
-
-                <div class="section-card">
-                    <div class="card-title">2. කාණ්ඩ කිරීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Grouping)</span></div>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> city, <span class="kw">COUNT</span>(*)<br><span class="kw">FROM</span> customers<br><span class="kw">GROUP BY</span> city;</div>
-                    </div>
-                    <div class="study-tip">
-                        <strong>උදාහරණය:</strong> ළමයි <b>වයස අනුව</b> වෙන් කිරීම. (Grouping by age).
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <div class="card-title">3. පිළිවෙල සැකසීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Sorting)</span></div>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> * <span class="kw">FROM</span> student<br><span class="kw">ORDER BY</span> marks <span class="kw">DESC</span>;</div>
-                    </div>
-                    <div class="study-tip">
-                        <span class="kw">DESC</span> = වැඩිම සිට (Descending)<br>
-                        <span class="kw">ASC</span> = අඩුම සිට (Ascending)
-                    </div>
+                <div class="tip-box">
+                    <strong>Note</strong> Order matters! First value goes to first column.
                 </div>
             </div>
 
-            <div class="col">
-                <div class="section-card">
-                    <div class="card-title">4. උප විමසුම් <span style="font-weight:400; font-size:11px; margin-left:auto;">(Nested)</span></div>
-                    <p>විමසුමක් ඇතුලේ තවත් විමසුමක් (Query inside query).</p>
-                    
-                    <h3>වැඩිම වයස ඇති ශිෂ්‍යයා?</h3>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> name <span class="kw">FROM</span> student<br><span class="kw">WHERE</span> age = (<br>&nbsp;&nbsp;<span class="kw">SELECT MAX</span>(age) <span class="kw">FROM</span> student<br>);</div>
-                    </div>
-                    
-                    <div class="study-tip">
-                        <strong>ක්‍රියාවලිය:</strong> වරහන් ඇතුලේ ඇති කොටස මුලින්ම ක්‍රියාත්මක වේ. (Inner runs first).
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">2. Update Data</div>
+                    <div class="card-subtitle">වෙනස් කිරීම</div>
                 </div>
-
-                <div class="section-card">
-                    <div class="card-title">5. Distinct</div>
-                    <p>අනුපිටපත් ඉවත් කිරීම (Remove duplicates).</p>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT DISTINCT</span> country<br><span class="kw">FROM</span> customers;</div>
-                    </div>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">UPDATE student
+SET name = 'Sunil'
+WHERE id = 1;</div>
                 </div>
+                <div class="tip-box" style="border-color: #d32f2f;">
+                    <strong>Warning</strong>
+                    Always use <span class="mono">WHERE</span> or you will update ALL rows!
+                </div>
+            </div>
 
-                <div class="section-card">
-                    <div class="card-title">6. රටා ගැලපීම <span style="font-weight:400; font-size:11px; margin-left:auto;">(Wildcards)</span></div>
-                    <div class="code-wrapper">
-                        <div class="code-block" contenteditable="true" spellcheck="false"><span class="kw">SELECT</span> * <span class="kw">FROM</span> student<br><span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="str">'S%'</span>;</div>
-                    </div>
-                    <div class="study-tip">
-                        <span class="str">'S%'</span> = 'S' වලින් පටන් ගන්නා. (Starts with S).
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">3. Delete Data</div>
+                    <div class="card-subtitle">මැකීම</div>
+                </div>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">DELETE FROM student
+WHERE id = 1;</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">4. Select (View)</div>
+                    <div class="card-subtitle">දත්ත බැලීම</div>
+                </div>
+                <p>View all data:</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT * FROM student;</div>
+                </div>
+                <p class="mt-2">Filter with Condition:</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT * FROM student
+WHERE age > 20;</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">5. Joins</div>
+                    <div class="card-subtitle">සම්බන්ධ කිරීම</div>
+                </div>
+                <p>Combine two tables based on a common column.</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT s.name, c.course
+FROM student AS s
+JOIN courses AS c
+ON s.cid = c.id;</div>
                 </div>
             </div>
         </div>
 
-        <div class="designer-credit">Designed by ChX</div>
-        <div class="footer-line"></div>
-        <div class="page-number">Page 03</div>
-    </div>
+        <!-- TAB 3: ANALYSIS -->
+        <div class="tab-view" id="view-analysis">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">1. Aggregates</div>
+                    <div class="card-subtitle">ගණනය කිරීම්</div>
+                </div>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT COUNT(*) FROM student;</div>
+                </div>
+                <div class="mt-2 code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT AVG(marks) FROM student;</div>
+                </div>
+            </div>
 
-    <script>
-        // 1. SETUP THE UI
-        document.addEventListener("DOMContentLoaded", function() {
-            // Initialize Database with Dummy Data
-            initDB();
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">2. Group By</div>
+                    <div class="card-subtitle">කාණ්ඩ කිරීම</div>
+                </div>
+                <p>Group data by a category (e.g., city).</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT city, COUNT(*)
+FROM customers
+GROUP BY city;</div>
+                </div>
+            </div>
 
-            // Attach UI handlers
-            const wrappers = document.querySelectorAll('.code-wrapper');
-            wrappers.forEach((wrapper, index) => {
-                // Add Run Button
-                const btn = document.createElement('button');
-                btn.className = 'run-btn';
-                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-                btn.title = "Run SQL";
-                btn.onclick = function() { runQuery(this); };
-                wrapper.appendChild(btn);
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">3. Order By</div>
+                    <div class="card-subtitle">පිළිවෙල සැකසීම</div>
+                </div>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT * FROM student
+ORDER BY marks DESC;</div>
+                </div>
+                <div class="tip-box">
+                    <span class="mono">DESC</span> = High to Low<br>
+                    <span class="mono">ASC</span> = Low to High
+                </div>
+            </div>
 
-                // Add Result Container
-                const resultDiv = document.createElement('div');
-                resultDiv.className = 'console-output';
-                resultDiv.id = 'res-' + index;
-                wrapper.appendChild(resultDiv);
-            });
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">4. Subqueries</div>
+                    <div class="card-subtitle">උප විමසුම්</div>
+                </div>
+                <p>Find student with Max age:</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT name FROM student
+WHERE age = (
+  SELECT MAX(age) FROM student
+);</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">5. Wildcards</div>
+                    <div class="card-subtitle">රටා ගැලපීම</div>
+                </div>
+                <p>Find names starting with 'S':</p>
+                <div class="code-wrapper">
+                    <div class="code-editor" contenteditable="true" spellcheck="false">SELECT * FROM student
+WHERE name LIKE 'S%';</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('ddl', this)">
+            <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+            <span>Structure</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('dml', this)">
+            <svg viewBox="0 0 24 24"><path d="M21 12h-4l-3 8-4-16-3 8H3"/></svg>
+            <span>Data</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('analysis', this)">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"/></svg>
+            <span>Query</span>
+        </button>
+    </nav>
+</div>
+
+<script>
+    // --- 1. APP LOGIC ---
+    function switchTab(tabId, btnElement) {
+        // Hide all views
+        document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+        // Show selected view
+        document.getElementById('view-' + tabId).classList.add('active');
+        
+        // Update Nav State
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        btnElement.classList.add('active');
+
+        // Scroll to top
+        document.getElementById('main-content').scrollTop = 0;
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- 2. INITIALIZATION ---
+    document.addEventListener("DOMContentLoaded", function() {
+        initDB();
+        
+        // Attach Run functionality
+        const editors = document.querySelectorAll('.code-wrapper');
+        editors.forEach((wrapper, index) => {
+            // Add FAB
+            const btn = document.createElement('button');
+            btn.className = 'run-fab';
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+            btn.onclick = function() { runQuery(this); };
+            wrapper.appendChild(btn);
+
+            // Add Console Drawer
+            const drawer = document.createElement('div');
+            drawer.className = 'console-drawer';
+            wrapper.appendChild(drawer);
         });
+    });
 
-        // 2. DATABASE INITIALIZATION
-        function initDB() {
-            alasql('CREATE DATABASE IF NOT EXISTS school_db');
-            alasql('USE school_db');
-            createBaseTables();
+    function resetDB() {
+        initDB();
+        showToast("Database Reset to Default");
+    }
 
-            console.log("Database initialized.");
-            
-            const resetBtn = document.querySelector('.reset-db');
-            if(resetBtn) {
-                const origText = resetBtn.innerHTML;
-                resetBtn.innerHTML = "RESET OK";
-                setTimeout(() => resetBtn.innerHTML = origText, 1500);
-            }
+    // --- 3. DATABASE LOGIC ---
+    function initDB() {
+        alasql('CREATE DATABASE IF NOT EXISTS school_db');
+        alasql('USE school_db');
+        createBaseTables();
+    }
 
-            document.querySelectorAll('.console-output').forEach(el => el.style.display = 'none');
-        }
+    function createBaseTables() {
+        alasql('DROP TABLE IF EXISTS student');
+        alasql('CREATE TABLE student (id INT, name STRING, age INT, marks INT, cid INT)');
+        alasql("INSERT INTO student VALUES (1, 'Kamal', 20, 85, 101), (2, 'Nimal', 22, 75, 102), (3, 'Sunil', 21, 60, 101), (4, 'Saman', 23, 90, 103), (5, 'Amara', 20, 55, 102)");
 
-        function createBaseTables() {
-            // Ensure fresh environment for base tables
-            alasql('DROP TABLE IF EXISTS student');
-            alasql('CREATE TABLE student (id INT, name STRING, age INT, marks INT, cid INT)');
-            alasql("INSERT INTO student VALUES (1, 'Kamal', 20, 85, 101), (2, 'Nimal', 22, 75, 102), (3, 'Sunil', 21, 60, 101), (4, 'Saman', 23, 90, 103), (5, 'Amara', 20, 55, 102)");
+        alasql('DROP TABLE IF EXISTS courses');
+        alasql('CREATE TABLE courses (id INT, course STRING)');
+        alasql("INSERT INTO courses VALUES (101, 'Science'), (102, 'Maths'), (103, 'Arts')");
 
-            alasql('DROP TABLE IF EXISTS courses');
-            alasql('CREATE TABLE courses (id INT, course STRING)');
-            alasql("INSERT INTO courses VALUES (101, 'Science'), (102, 'Maths'), (103, 'Arts')");
+        alasql('DROP TABLE IF EXISTS customers');
+        alasql('CREATE TABLE customers (id INT, name STRING, city STRING, country STRING)');
+        alasql("INSERT INTO customers VALUES (1, 'A', 'Colombo', 'SL'), (2, 'B', 'Kandy', 'SL'), (3, 'C', 'Colombo', 'SL')");
+    }
 
-            alasql('DROP TABLE IF EXISTS users');
-            alasql('CREATE TABLE users (id INT, username STRING)');
-            alasql("INSERT INTO users VALUES (1, 'admin'), (2, 'guest')");
+    function runQuery(btn) {
+        const wrapper = btn.parentElement;
+        const editor = wrapper.querySelector('.code-editor');
+        const drawer = wrapper.querySelector('.console-drawer');
+        
+        let sql = editor.innerText.trim().replace(/\u00a0/g, " ");
 
-            alasql('DROP TABLE IF EXISTS orders');
-            alasql('CREATE TABLE orders (oid INT, uid INT, amount INT)');
-            alasql("INSERT INTO orders VALUES (10, 1, 500), (11, 2, 250)");
+        // Visual Feedback
+        btn.style.transform = "scale(0.9)";
+        setTimeout(() => btn.style.transform = "scale(1)", 150);
 
-            alasql('DROP TABLE IF EXISTS customers');
-            alasql('CREATE TABLE customers (id INT, name STRING, city STRING, country STRING)');
-            alasql("INSERT INTO customers VALUES (1, 'A', 'Colombo', 'Sri Lanka'), (2, 'B', 'Kandy', 'Sri Lanka'), (3, 'C', 'Colombo', 'Sri Lanka'), (4, 'D', 'Galle', 'Sri Lanka')");
+        drawer.innerHTML = '<div class="console-header">Processing...</div>';
+        drawer.classList.add('open');
 
-            alasql('DROP TABLE IF EXISTS sales');
-            alasql('CREATE TABLE sales (id INT, amount INT)');
-            alasql("INSERT INTO sales VALUES (1, 100), (2, 200), (3, 50)");
-        }
-
-        // 3. EXECUTION LOGIC
-        function runQuery(btn) {
-            const wrapper = btn.parentElement;
-            const codeBlock = wrapper.querySelector('.code-block');
-            const resultDiv = wrapper.querySelector('.console-output');
-            
-            let sql = codeBlock.innerText.trim();
-            sql = sql.replace(/\u00a0/g, " "); 
-
-            // --- TABLE DETECTION LOGIC ---
-            let targetTable = null;
-            let isModification = false;
-
-            if (/^INSERT\s+INTO\s+(\w+)/i.test(sql)) {
-                targetTable = sql.match(/^INSERT\s+INTO\s+(\w+)/i)[1];
-                isModification = true;
-            } else if (/^UPDATE\s+(\w+)/i.test(sql)) {
-                targetTable = sql.match(/^UPDATE\s+(\w+)/i)[1];
-                isModification = true;
-            } else if (/^DELETE\s+FROM\s+(\w+)/i.test(sql)) {
-                targetTable = sql.match(/^DELETE\s+FROM\s+(\w+)/i)[1];
-                isModification = true;
-            } else if (/^ALTER\s+TABLE\s+(\w+)/i.test(sql)) {
-                targetTable = sql.match(/^ALTER\s+TABLE\s+(\w+)/i)[1];
-                isModification = true;
-            } else if (/^CREATE\s+TABLE\s+(\w+)/i.test(sql)) {
-                targetTable = sql.match(/^CREATE\s+TABLE\s+(\w+)/i)[1];
-                isModification = true;
-            }
-
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<span style="color:#aaa">Running...</span>';
-
-            // AUTO-HEAL ATTEMPT LOOP
-            try {
-                executeAndShow(sql, resultDiv, targetTable, isModification);
-            } catch (e) {
-                // Check for "does not exist" or similar db errors
-                const msg = e.message.toLowerCase();
-                if (msg.includes("does not exist") || msg.includes("not found")) {
-                    console.log("Auto-healing tables...");
-                    // Force restore tables
-                    initDB(); 
-                    // Retry execution
-                    try {
-                        executeAndShow(sql, resultDiv, targetTable, isModification);
-                    } catch (e2) {
-                        resultDiv.innerHTML = '<span class="error-msg">ERR: ' + e2.message + '</span>';
-                    }
-                } else {
-                    resultDiv.innerHTML = '<span class="error-msg">ERR: ' + e.message + '</span>';
-                }
-            }
-        }
-
-        function executeAndShow(sql, resultDiv, targetTable, isModification) {
+        try {
             let res = alasql(sql);
-            let outputHTML = "";
-            
-            // 1. Query Result / Success
-            if (Array.isArray(res) && res.length > 0) {
-                outputHTML += '<div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px;">Result Extraction:</div>';
-                outputHTML += generateTableHTML(res);
-            } else if (Array.isArray(res) && res.length === 0) {
-                outputHTML += '<span class="success-msg">✔ Valid Query. No results returned.</span>';
-            } else if (typeof res === 'object') {
-                let affected = res.affectedRows !== undefined ? res.affectedRows : 1;
-                outputHTML += `<span class="success-msg">✔ Success. Rows affected: ${affected}</span>`;
-            } else {
-                outputHTML += '<span class="success-msg">✔ Command executed successfully.</span>';
-            }
-
-            // 2. Show Affected Table State
-            if (isModification && targetTable) {
+            renderResult(res, drawer);
+        } catch (e) {
+            // Simple Auto-heal try
+            if (e.message.toLowerCase().includes("not found")) {
+                initDB();
                 try {
-                    let tableData = alasql(`SELECT * FROM ${targetTable}`);
-                    outputHTML += `<div style="margin-top:10px; margin-bottom:5px; font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px;">Table State (${targetTable}):</div>`;
-                    if (tableData.length > 0) {
-                        outputHTML += generateTableHTML(tableData);
-                    } else {
-                        outputHTML += '<div style="color:#666; font-style:italic;">(Table is empty)</div>';
-                    }
-                } catch (err) {
-                     outputHTML += `<div style="margin-top:5px; color:#666;">(Table '${targetTable}' cannot be read)</div>`;
+                    let res = alasql(sql);
+                    renderResult(res, drawer);
+                } catch (e2) {
+                    drawer.innerHTML = `<div class="console-header">Error</div><div class="console-body"><span class="error">${e2.message}</span></div>`;
                 }
+            } else {
+                drawer.innerHTML = `<div class="console-header">Error</div><div class="console-body"><span class="error">${e.message}</span></div>`;
             }
-            resultDiv.innerHTML = outputHTML;
         }
+    }
 
-        function generateTableHTML(data) {
-            if(typeof data[0] !== 'object') return `<span class="success-msg">${data}</span>`;
-
-            let cols = Object.keys(data[0]);
-            let html = '<table><thead><tr>';
-            cols.forEach(c => { html += `<th>${c}</th>`; });
-            html += '</tr></thead><tbody>';
-            data.forEach(row => {
-                html += '<tr>';
-                cols.forEach(c => { 
-                    let val = row[c];
-                    if(val === null || val === undefined) val = '<span style="color:#999">NULL</span>';
-                    html += `<td>${val}</td>`; 
+    function renderResult(data, container) {
+        let html = '<div class="console-header">Result</div><div class="console-body">';
+        
+        if (Array.isArray(data)) {
+            if (data.length === 0) {
+                html += '<span class="success">✔ Executed. No rows returned.</span>';
+            } else if (typeof data[0] === 'object') {
+                html += '<table><thead><tr>';
+                Object.keys(data[0]).forEach(k => html += `<th>${k}</th>`);
+                html += '</tr></thead><tbody>';
+                data.forEach(row => {
+                    html += '<tr>';
+                    Object.values(row).forEach(val => html += `<td>${val}</td>`);
+                    html += '</tr>';
                 });
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
-            return html;
+                html += '</tbody></table>';
+            } else {
+                html += `<span class="success">${data}</span>`;
+            }
+        } else if (typeof data === 'object') {
+            html += `<span class="success">✔ Success. Rows affected: ${data.affectedRows || 1}</span>`;
+        } else {
+            html += '<span class="success">✔ Command Successful</span>';
         }
-    </script>
+        html += '</div>';
+        container.innerHTML = html;
+    }
+</script>
 </body>
 </html>
